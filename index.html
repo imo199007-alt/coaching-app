@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>研修振り返りアプリ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#3B82F6;--primary-dark:#2563EB;--primary-light:#EFF6FF;
+  --success:#10B981;--danger:#EF4444;
+  --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;
+  --gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;
+  --gray-700:#374151;--gray-800:#1F2937;--gray-900:#111827;
+  --radius:10px;--shadow:0 1px 3px rgba(0,0,0,.1);--shadow-md:0 4px 6px rgba(0,0,0,.07);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;
+  background:var(--gray-50);color:var(--gray-800);font-size:15px;line-height:1.6;min-height:100vh}
+#app{max-width:640px;margin:0 auto;padding:12px 16px}
+.page{display:none}.page.active{display:block}
+
+/* Header */
+.app-header{background:#fff;border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow)}
+.app-header .brand{font-size:15px;font-weight:700;color:var(--primary)}
+.app-header .user-info{font-size:13px;color:var(--gray-500);display:flex;gap:8px;align-items:center}
+.app-header .user-info button{font-size:12px;color:var(--danger);background:none;border:none;cursor:pointer;padding:2px 6px}
+
+/* Cards */
+.card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--gray-900)}
+
+/* Forms */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px}
+.field input,.field textarea,.field select{
+  width:100%;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:8px;
+  font-size:15px;font-family:inherit;transition:border-color .15s;background:#fff;color:var(--gray-800);
+  -webkit-appearance:none}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--primary)}
+.field textarea{resize:vertical;min-height:80px}
+
+/* Options */
+.options-list{display:flex;flex-direction:column;gap:8px}
+.options-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.opt-item{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border:1.5px solid var(--gray-200);border-radius:8px;cursor:pointer;transition:.15s;
+  -webkit-tap-highlight-color:transparent}
+.opt-item:has(input:checked){border-color:var(--primary);background:var(--primary-light)}
+.opt-item input[type=radio]{accent-color:var(--primary);width:16px;height:16px;flex-shrink:0}
+.opt-item span{font-size:14px;line-height:1.4}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 20px;border-radius:8px;border:none;font-size:14px;font-weight:600;
+  cursor:pointer;transition:background .15s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:active{opacity:.85}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200)}
+.btn-secondary:hover{background:var(--gray-200)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:7px 12px;font-size:13px}
+.btn-full{width:100%;padding:13px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Tabs */
+.tabs{display:flex;background:var(--gray-100);border-radius:8px;padding:3px;margin-bottom:16px}
+.tab-btn{flex:1;padding:8px 4px;border:none;background:none;border-radius:6px;
+  font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);transition:.15s;
+  -webkit-tap-highlight-color:transparent}
+.tab-btn.active{background:#fff;color:var(--primary);box-shadow:var(--shadow)}
+
+/* Badges */
+.round-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.round-1{background:#DBEAFE;color:#1D4ED8}
+.round-2{background:#D1FAE5;color:#065F46}
+.round-3{background:#FEF3C7;color:#92400E}
+
+/* History */
+.history-group{border:1.5px solid var(--gray-200);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.history-group-header{padding:12px 14px;background:var(--gray-50);
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.history-group-header:active{background:var(--gray-100)}
+.history-group-body{padding:14px;border-top:1px solid var(--gray-200);display:none}
+.history-group-body.open{display:block}
+.qa-item{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--gray-100)}
+.qa-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.qa-q{font-size:13px;color:var(--gray-500);margin-bottom:4px;white-space:pre-wrap}
+.qa-a{font-size:15px;color:var(--gray-800);white-space:pre-wrap}
+
+/* Alerts */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.alert-error{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
+.alert-success{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
+.alert-info{background:var(--primary-light);color:#1E40AF;border:1px solid #BFDBFE}
+
+/* Admin */
+.admin-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.admin-nav button{padding:10px 4px;font-size:13px}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--gray-50);padding:8px 10px;text-align:left;color:var(--gray-600);
+   font-weight:600;border-bottom:2px solid var(--gray-200)}
+td{padding:8px 10px;border-bottom:1px solid var(--gray-100);color:var(--gray-700);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+
+/* Theme cards */
+.theme-card{border:1.5px solid var(--gray-200);border-radius:8px;padding:14px 16px;
+  cursor:pointer;transition:.15s;margin-bottom:10px;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  -webkit-tap-highlight-color:transparent}
+.theme-card:active{border-color:var(--primary);background:var(--primary-light)}
+.theme-card .theme-name{font-size:15px;font-weight:600}
+.theme-card .theme-desc{font-size:13px;color:var(--gray-400);margin-top:3px}
+.theme-card .arrow{color:var(--gray-300);font-size:20px;flex-shrink:0;margin-top:2px}
+
+/* Empty/Loading */
+.empty{text-align:center;padding:32px 16px;color:var(--gray-400)}
+.empty-icon{font-size:36px;margin-bottom:8px}
+.loading{text-align:center;padding:24px;color:var(--gray-400);font-size:14px}
+.spinner{width:24px;height:24px;border:3px solid var(--gray-200);border-top-color:var(--primary);
+  border-radius:50%;animation:spin .7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Type badges */
+.type-badge{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600;display:inline-block}
+.type-text{background:#F3F4F6;color:#4B5563}
+.type-select{background:#EDE9FE;color:#5B21B6}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;
+  display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-box{background:#fff;border-radius:16px;width:100%;max-width:480px;
+  padding:20px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:16px}
+.modal-close{float:right;background:none;border:none;font-size:24px;cursor:pointer;color:var(--gray-400);line-height:1}
+
+
+@media(max-width:480px){
+  #app{padding:8px}
+  .card{padding:14px}
+  .admin-nav{grid-template-columns:repeat(3,1fr)}
+  .admin-nav button{font-size:12px;padding:8px 2px}
+  .btn-group{flex-direction:column}
+  .btn-group .btn{width:100%}
+  td .btn-group{flex-direction:row}
+  td .btn-group .btn{width:auto}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ログイン -->
+<div id="page-auth" class="page active">
+  <div id="auth-user-block">
+    <div style="text-align:center;padding:40px 0 20px">
+      <div style="font-size:48px;margin-bottom:10px">📋</div>
+      <div style="font-size:24px;font-weight:800;color:var(--primary)">研修振り返りアプリ</div>
+      <div style="font-size:13px;color:var(--gray-400);margin-top:6px">研修の振り返りを記録・確認できます</div>
+    </div>
+    <div class="card">
+      <div id="auth-login-error"></div>
+      <div class="field">
+        <label>ユーザー名</label>
+        <input type="text" id="login-username" placeholder="ユーザー名を入力" autocomplete="username" inputmode="text">
+      </div>
+      <div class="field">
+        <label>パスワード</label>
+        <input type="password" id="login-password" placeholder="パスワードを入力" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">ログイン</button>
+      <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:14px">
+        アカウントがない場合は管理者にお問い合わせください
+      </p>
+      <div style="text-align:center;margin-top:8px;padding-top:12px;border-top:1px solid var(--gray-100)">
+        <button onclick="showAdminLogin()" style="font-size:12px;color:var(--gray-500);background:none;border:none;cursor:pointer;text-decoration:underline">管理者の方はこちら</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="auth-admin-block" style="display:none">
+    <div style="background:#1F2937;border-radius:16px;padding:32px 20px;text-align:center;margin-bottom:16px">
+      <div style="font-size:40px;margin-bottom:8px">⚙️</div>
+      <div style="font-size:20px;font-weight:800;color:#F9FAFB">管理者ポータル</div>
+      <div style="font-size:12px;color:#9CA3AF;margin-top:6px">研修振り返りアプリ 管理画面</div>
+    </div>
+    <div class="card" style="border:2px solid #374151">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--gray-100)">
+        <span style="background:#374151;color:#F9FAFB;font-size:12px;font-weight:700;padding:3px 10px;border-radius:4px">ADMIN</span>
+        <span style="font-size:14px;font-weight:600;color:var(--gray-700)">管理者認証</span>
+      </div>
+      <div id="auth-admin-error"></div>
+      <div class="field">
+        <label>管理パスワード</label>
+        <input type="password" id="admin-password" placeholder="管理パスワードを入力" autocomplete="current-password">
+      </div>
+      <button class="btn btn-full" style="background:#1F2937;color:#fff;font-weight:700" onclick="doAdminLogin()">管理画面へログイン</button>
+      <div style="text-align:center;margin-top:14px">
+        <button onclick="showUserLogin()" style="font-size:12px;color:var(--gray-400);background:none;border:none;cursor:pointer">← スタッフ用ログインへ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ユーザー: ホーム -->
+<div id="page-home" class="page">
+  <div class="app-header">
+    <div class="brand">📋 振り返りアプリ</div>
+    <div class="user-info">
+      <span id="header-username"></span>
+      <button onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchHomeTab('answer')">振り返りを記録</button>
+    <button class="tab-btn" onclick="switchHomeTab('history')">過去の回答を確認</button>
+  </div>
+  <div id="home-answer">
+    <div class="card">
+      <div class="card-title">テーマを選んでください</div>
+      <div id="theme-list-answer"><div class="loading"><span class="spinner"></span>読み込み中...</div></div>
+    </div>
+  </div>
+  <div id="home-history" style="display:none">
+    <div class="card">
+      <div class="card-title">振り返り履歴</div>
+      <div id="theme-list-history"><div class="loading"><span class="spinner"></span>読み込み中...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ユーザー: 回答 -->
+<div id="page-answer" class="page">
+  <div class="app-header">
+    <div class="brand">📋 振り返りアプリ</div>
+    <div class="user-info"><span id="header-username2"></span><button onclick="doLogout()">ログアウト</button></div>
+  </div>
+  <div class="card">
+    <button class="btn btn-secondary btn-sm" style="margin-bottom:14px" onclick="showPage('page-home')">← 戻る</button>
+    <div id="answer-theme-name" class="card-title"></div>
+    <div id="answer-round-select" style="margin-bottom:16px"></div>
+    <div id="answer-questions"></div>
+    <div id="answer-error"></div>
+    <div id="answer-actions" style="display:none;margin-top:16px">
+      <button class="btn btn-primary btn-full" onclick="submitAnswers()">回答を送信する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ユーザー: 履歴詳細 -->
+<div id="page-history-detail" class="page">
+  <div class="app-header">
+    <div class="brand">📋 振り返りアプリ</div>
+    <div class="user-info"><span id="header-username3"></span><button onclick="doLogout()">ログアウト</button></div>
+  </div>
+  <div class="card">
+    <button class="btn btn-secondary btn-sm" style="margin-bottom:14px" onclick="goBackToHistory()">← 戻る</button>
+    <div id="history-detail-theme" class="card-title"></div>
+    <div id="history-detail-content"></div>
+  </div>
+</div>
+
+<!-- 管理者 -->
+<div id="page-admin" class="page">
+  <div class="app-header">
+    <div class="brand">⚙️ 管理画面</div>
+    <div class="user-info">
+      <span style="font-size:11px;background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:4px">管理者</span>
+      <button onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+  <div class="admin-nav">
+    <button class="btn btn-secondary" onclick="adminTab('themes')">テーマ管理</button>
+    <button class="btn btn-secondary" onclick="adminTab('users')">ユーザー管理</button>
+    <button class="btn btn-secondary" onclick="adminTab('answers')">回答確認</button>
+  </div>
+
+  <div id="admin-themes">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0">テーマ一覧</div>
+        <button class="btn btn-primary btn-sm" onclick="openThemeModal()">＋ 追加</button>
+      </div>
+      <div id="admin-theme-list"><div class="loading"><span class="spinner"></span>読み込み中...</div></div>
+    </div>
+  </div>
+
+  <div id="admin-questions" style="display:none">
+    <div class="card">
+      <button class="btn btn-secondary btn-sm" style="margin-bottom:14px" onclick="adminTab('themes')">← テーマ一覧へ</button>
+      <div class="card-title" id="admin-q-theme-name"></div>
+      <div class="tabs">
+        <button class="tab-btn active" id="q-tab-1" onclick="adminQRound(1)">初回</button>
+        <button class="tab-btn" id="q-tab-2" onclick="adminQRound(2)">1か月後</button>
+        <button class="tab-btn" id="q-tab-3" onclick="adminQRound(3)">3か月後</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div id="copy-from-round1-wrap" style="display:none">
+          <button class="btn btn-secondary btn-sm" onclick="copyFromRound1()">📋 初回の設問をコピー</button>
+        </div>
+        <div style="margin-left:auto">
+          <button class="btn btn-primary btn-sm" onclick="openQuestionModal()">＋ 設問を追加</button>
+        </div>
+      </div>
+      <div id="admin-question-list"></div>
+    </div>
+  </div>
+
+  <div id="admin-users" style="display:none">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0">ユーザー一覧</div>
+        <button class="btn btn-primary btn-sm" onclick="openCreateUserModal()">＋ ユーザー追加</button>
+      </div>
+      <div id="admin-user-list"></div>
+    </div>
+  </div>
+
+  <div id="admin-answers" style="display:none">
+    <div class="card">
+      <div class="card-title">ユーザー別回答確認</div>
+      <div id="admin-answers-content"></div>
+    </div>
+  </div>
+
+  <div id="admin-answer-detail" style="display:none">
+    <div class="card">
+      <button class="btn btn-secondary btn-sm" style="margin-bottom:14px" onclick="adminTab('answers')">← 戻る</button>
+      <div class="card-title" id="admin-detail-username"></div>
+      <div id="admin-detail-content"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<!-- モーダル: テーマ -->
+<div id="modal-theme" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-theme')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-theme')">×</button>
+      <div class="modal-title" id="modal-theme-title">テーマを追加</div>
+      <div class="field"><label>テーマ名 *</label><input type="text" id="modal-theme-name" placeholder="例：コーチング研修"></div>
+      <div class="field"><label>説明（任意）</label><textarea id="modal-theme-desc" placeholder="テーマの説明"></textarea></div>
+      <input type="hidden" id="modal-theme-id">
+      <div id="modal-theme-error"></div>
+      <button class="btn btn-primary btn-full" onclick="saveTheme()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- モーダル: 設問 -->
+<div id="modal-question" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-question')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-question')">×</button>
+      <div class="modal-title" id="modal-q-title">設問を追加</div>
+      <div class="field"><label>設問テキスト *</label><textarea id="modal-q-text" placeholder="設問を入力（改行可）" style="min-height:100px"></textarea></div>
+      <div class="field">
+        <label>回答形式</label>
+        <div class="tabs" style="margin-bottom:0">
+          <button class="tab-btn active" id="qtype-text-btn" onclick="setQType('text')">記述式</button>
+          <button class="tab-btn" id="qtype-select-btn" onclick="setQType('select')">選択式</button>
+        </div>
+      </div>
+      <div id="modal-q-options-wrap" style="display:none" class="field">
+        <label>選択肢（1行に1つ）</label>
+        <textarea id="modal-q-options" placeholder="例：&#10;1=未着手&#10;2=意識あり&#10;3=実施中&#10;4=定着&#10;5=他者に指導できる"></textarea>
+      </div>
+      <div class="field"><label>表示順</label><input type="number" id="modal-q-order" placeholder="例：1" inputmode="numeric"></div>
+      <input type="hidden" id="modal-q-id">
+      <div id="modal-q-error"></div>
+      <button class="btn btn-primary btn-full" onclick="saveQuestion()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- モーダル: ユーザー追加 -->
+<div id="modal-create-user" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-create-user')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-create-user')">×</button>
+      <div class="modal-title">ユーザーを追加</div>
+      <div class="field"><label>ユーザー名</label><input type="text" id="new-user-name" placeholder="ユーザー名を入力"></div>
+      <div class="field"><label>パスワード</label><input type="password" id="new-user-pass" placeholder="パスワードを入力"></div>
+      <div id="modal-user-error"></div>
+      <button class="btn btn-primary btn-full" onclick="adminCreateUser()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwa9hD7G_OphQXQtA5fbBZ_imhAL87FIdmWMjfxtooLv91TfVYn6EA1m03AHDo1kWjJ/exec';
+var ROUND_LABELS = {1:'初回',2:'1か月後',3:'3か月後'};
+var state = {token:null,role:null,username:null,userId:null,currentTheme:null,currentRound:null,adminCurrentTheme:null,adminCurrentRound:1};
+
+// ── GAS URL管理 ──
+
+
+// ── API ──
+function api(data) {
+  data.token = state.token || null;
+  return fetch(GAS_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify(data)
+  })
+  .then(function(r){ return r.json(); })
+  .catch(function(e){ return {ok:false, error:'通信エラー: '+e.message}; });
+}
+
+// ── ページ制御 ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showUserLogin() {
+  document.getElementById('auth-user-block').style.display = 'block';
+  document.getElementById('auth-admin-block').style.display = 'none';
+}
+function showAdminLogin() {
+  document.getElementById('auth-user-block').style.display = 'none';
+  document.getElementById('auth-admin-block').style.display = 'block';
+}
+function switchHomeTab(tab) {
+  var tabs = document.querySelectorAll('#page-home .tabs .tab-btn');
+  tabs[0].classList.toggle('active', tab==='answer');
+  tabs[1].classList.toggle('active', tab==='history');
+  document.getElementById('home-answer').style.display = tab==='answer' ? 'block' : 'none';
+  document.getElementById('home-history').style.display = tab==='history' ? 'block' : 'none';
+  if (tab==='history') loadHistoryThemes();
+}
+function adminTab(tab) {
+  ['themes','questions','users','answers','answer-detail'].forEach(function(t){
+    document.getElementById('admin-'+t).style.display='none';
+  });
+  if (tab==='themes')        { loadAdminThemes();          document.getElementById('admin-themes').style.display='block'; }
+  if (tab==='questions')     {                             document.getElementById('admin-questions').style.display='block'; }
+  if (tab==='users')         { loadAdminUsers();           document.getElementById('admin-users').style.display='block'; }
+  if (tab==='answers')       { loadAdminAnswersUserList(); document.getElementById('admin-answers').style.display='block'; }
+  if (tab==='answer-detail') {                             document.getElementById('admin-answer-detail').style.display='block'; }
+}
+function adminQRound(round) {
+  state.adminCurrentRound = round;
+  [1,2,3].forEach(function(r){ document.getElementById('q-tab-'+r).classList.toggle('active',r===round); });
+  var w = document.getElementById('copy-from-round1-wrap');
+  if (w) w.style.display = round===1 ? 'none' : 'block';
+  loadAdminQuestions();
+}
+
+// ── 認証 ──
+function setUser(data) {
+  state.token = data.token; state.username = data.username||''; state.userId = data.userId||'';
+  ['header-username','header-username2','header-username3'].forEach(function(id){
+    document.getElementById(id).textContent = data.username;
+  });
+}
+function doLogin() {
+  var u = document.getElementById('login-username').value.trim();
+  var p = document.getElementById('login-password').value;
+  if (!u||!p){ showError('auth-login-error','入力してください'); return; }
+  showError('auth-login-error','');
+  api({action:'login',username:u,password:p}).then(function(r){
+    if (!r.ok){ showError('auth-login-error',r.error); return; }
+    setUser(r); showPage('page-home'); loadAnswerThemes();
+  });
+}
+function doAdminLogin() {
+  var p = document.getElementById('admin-password').value;
+  if (!p){ showError('auth-admin-error','パスワードを入力してください'); return; }
+  showError('auth-admin-error','');
+  api({action:'adminLogin',password:p}).then(function(r){
+    if (!r.ok){ showError('auth-admin-error',r.error); return; }
+    state.token = r.token; state.role = 'admin';
+    showPage('page-admin'); adminTab('themes');
+  });
+}
+function doLogout() {
+  api({action:'logout'}).then(function(){
+    state.token=null; state.role=null; showUserLogin(); showPage('page-auth');
+  });
+}
+
+// ── テーマ一覧 ──
+function loadAnswerThemes() {
+  api({action:'getThemes'}).then(function(r){
+    var el = document.getElementById('theme-list-answer');
+    if (!r.ok||!r.themes||!r.themes.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>テーマがありません</p></div>'; return; }
+    el.innerHTML = r.themes.map(function(t){
+      return '<div class="theme-card" onclick="openAnswerTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">' +
+        '<div><div class="theme-name">'+esc(t.themeName)+'</div>'+(t.description?'<div class="theme-desc">'+esc(t.description)+'</div>':'')+
+        '</div><div class="arrow">›</div></div>';
+    }).join('');
+  });
+}
+function loadHistoryThemes() {
+  api({action:'getThemes'}).then(function(r){
+    var el = document.getElementById('theme-list-history');
+    if (!r.ok||!r.themes||!r.themes.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>テーマがありません</p></div>'; return; }
+    el.innerHTML = r.themes.map(function(t){
+      return '<div class="theme-card" onclick="openHistoryTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">' +
+        '<div><div class="theme-name">'+esc(t.themeName)+'</div>'+(t.description?'<div class="theme-desc">'+esc(t.description)+'</div>':'')+
+        '</div><div class="arrow">›</div></div>';
+    }).join('');
+  });
+}
+
+// ── 回答 ──
+function openAnswerTheme(themeId, themeName) {
+  state.currentTheme = themeId; state.currentRound = null;
+  document.getElementById('answer-theme-name').textContent = themeName;
+  document.getElementById('answer-questions').innerHTML = '';
+  document.getElementById('answer-error').innerHTML = '';
+  document.getElementById('answer-actions').style.display = 'none';
+  var html = '<div class="field"><label style="margin-bottom:8px">何回目の振り返りですか？</label><div class="options-list">';
+  [1,2,3].forEach(function(r){
+    html += '<label class="opt-item"><input type="radio" name="round" value="'+r+'" onchange="selectRound('+r+')"><span>'+ROUND_LABELS[r]+'</span></label>';
+  });
+  html += '</div></div>';
+  document.getElementById('answer-round-select').innerHTML = html;
+  showPage('page-answer');
+}
+function selectRound(round) {
+  state.currentRound = round;
+  var el = document.getElementById('answer-questions');
+  var actEl = document.getElementById('answer-actions');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>設問を読み込み中...</div>';
+  document.getElementById('answer-error').innerHTML = '';
+  actEl.style.display = 'none';
+  api({action:'getQuestions',themeId:state.currentTheme,round:round}).then(function(r){
+    if (!r.ok){ el.innerHTML='<div class="alert alert-error">'+esc(r.error)+'</div>'; return; }
+    if (!r.questions||!r.questions.length){ el.innerHTML='<div class="alert alert-info">この回数の設問はまだ設定されていません。</div>'; return; }
+    api({action:'getMyAnswers',themeId:state.currentTheme,round:round}).then(function(ar){
+      var answered = ar.ok && ar.answers && ar.answers.some(function(a){ return a.answerText!==''; });
+      if (answered){ el.innerHTML='<div class="alert alert-success">この振り返りは回答済みです。</div>'+renderView(ar.answers); }
+      else { el.innerHTML=renderForm(r.questions); actEl.style.display='block'; }
+    });
+  });
+}
+function renderForm(questions) {
+  return questions.map(function(q){
+    var html = '<div class="field" data-qid="'+q.questionId+'"><label style="white-space:pre-wrap">'+escBr(q.questionText)+'</label>';
+    if (q.questionType==='select'&&q.options) {
+      var opts = String(q.options).split('\n').filter(function(o){ return o.trim(); });
+      var short = opts.every(function(o){ return o.trim().length<=10; });
+      html += '<div class="'+(short?'options-grid':'options-list')+'">' +
+        opts.map(function(o){ return '<label class="opt-item"><input type="radio" name="q_'+q.questionId+'" value="'+esc(o.trim())+'"><span>'+esc(o.trim())+'</span></label>'; }).join('') + '</div>';
+    } else {
+      html += '<textarea placeholder="回答を入力してください"></textarea>';
+    }
+    return html+'</div>';
+  }).join('');
+}
+function renderView(answers) {
+  return answers.map(function(q){
+    return '<div class="qa-item"><div class="qa-q">'+escBr(q.questionText)+'</div>' +
+      '<div class="qa-a">'+(q.answerText?esc(q.answerText):'<span style="color:var(--gray-300)">未回答</span>')+'</div></div>';
+  }).join('');
+}
+function submitAnswers() {
+  if (!state.currentRound){ showError('answer-error','回数を選択してください'); return; }
+  var fields = document.querySelectorAll('#answer-questions [data-qid]');
+  var answers=[]; var invalid=false;
+  fields.forEach(function(f){
+    var qid=f.dataset.qid;
+    var ta=f.querySelector('textarea'); var rd=f.querySelector('input[type=radio]:checked');
+    var val=ta?ta.value.trim():(rd?rd.value:'');
+    if(!val) invalid=true;
+    answers.push({questionId:qid,answerText:val});
+  });
+  if(invalid){ showError('answer-error','全ての設問に回答してください'); return; }
+  api({action:'submitAnswers',themeId:state.currentTheme,round:state.currentRound,answers:answers}).then(function(r){
+    if(!r.ok){ showError('answer-error',r.error); return; }
+    document.getElementById('answer-questions').innerHTML='<div class="alert alert-success">✅ 回答を保存しました。</div>';
+    document.getElementById('answer-actions').style.display='none';
+    document.getElementById('answer-error').innerHTML='';
+  });
+}
+
+// ── 履歴 ──
+function openHistoryTheme(themeId, themeName) {
+  state.currentTheme = themeId;
+  document.getElementById('history-detail-theme').textContent = themeName+' の振り返り履歴';
+  var el = document.getElementById('history-detail-content');
+  el.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
+  showPage('page-history-detail');
+  api({action:'getMyThemeSummary',themeId:themeId}).then(function(r){
+    if (!r.ok||!r.rounds||!r.rounds.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><p>まだ回答がありません</p></div>'; return; }
+    el.innerHTML = r.rounds.map(function(round){
+      return '<div class="history-group">' +
+        '<div class="history-group-header" onclick="toggleGroup(this)">' +
+        '<div style="display:flex;align-items:center;gap:8px"><span class="round-badge round-'+round+'">'+ROUND_LABELS[round]+'</span></div>' +
+        '<span style="color:var(--gray-300)">▼</span></div>' +
+        '<div class="history-group-body" data-round="'+round+'"></div></div>';
+    }).join('');
+  });
+}
+function goBackToHistory(){ showPage('page-home'); switchHomeTab('history'); }
+function toggleGroup(header) {
+  var body=header.nextElementSibling; var isOpen=body.classList.contains('open');
+  if (!isOpen&&body.innerHTML==='') {
+    body.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
+    body.classList.add('open');
+    api({action:'getMyAnswers',themeId:state.currentTheme,round:body.dataset.round}).then(function(r){
+      body.innerHTML = r.ok ? renderView(r.answers) : '<div class="alert alert-error">読み込み失敗</div>';
+    });
+  } else { body.classList.toggle('open',!isOpen); }
+}
+
+// ── 管理: テーマ ──
+function loadAdminThemes() {
+  api({action:'adminGetThemes'}).then(function(r){
+    var el=document.getElementById('admin-theme-list');
+    if (!r.ok||!r.themes||!r.themes.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>テーマがありません</p></div>'; return; }
+    el.innerHTML = r.themes.map(function(t){
+      return '<div style="padding:12px 0;border-bottom:1px solid var(--gray-100)">' +
+        '<div style="font-weight:600;margin-bottom:6px">'+esc(t.themeName)+'</div>' +
+        (t.description?'<div style="font-size:12px;color:var(--gray-400);margin-bottom:8px">'+esc(t.description)+'</div>':'') +
+        '<div class="btn-group">' +
+        '<button class="btn btn-secondary btn-sm" onclick="openQuestionsForTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">設問管理</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="openThemeModal(\''+t.themeId+'\',\''+esc(t.themeName)+'\',\''+esc(t.description||'')+'\')">編集</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteTheme(\''+t.themeId+'\')">削除</button>' +
+        '</div></div>';
+    }).join('');
+  });
+}
+function openThemeModal(id,name,desc){
+  document.getElementById('modal-theme-id').value=id||'';
+  document.getElementById('modal-theme-name').value=name||'';
+  document.getElementById('modal-theme-desc').value=desc||'';
+  document.getElementById('modal-theme-title').textContent=id?'テーマを編集':'テーマを追加';
+  document.getElementById('modal-theme-error').innerHTML='';
+  document.getElementById('modal-theme').style.display='flex';
+}
+function saveTheme(){
+  var id=document.getElementById('modal-theme-id').value;
+  var name=document.getElementById('modal-theme-name').value.trim();
+  var desc=document.getElementById('modal-theme-desc').value.trim();
+  if(!name){ showError('modal-theme-error','テーマ名を入力してください'); return; }
+  api({action:'adminSaveTheme',themeId:id||null,themeName:name,description:desc}).then(function(r){
+    if(!r.ok){ showError('modal-theme-error',r.error); return; }
+    closeModal('modal-theme'); loadAdminThemes();
+  });
+}
+function deleteTheme(id){ if(!confirm('このテーマを削除しますか？')) return; api({action:'adminDeleteTheme',themeId:id}).then(function(){ loadAdminThemes(); }); }
+
+// ── 管理: 設問 ──
+function openQuestionsForTheme(themeId,themeName){
+  state.adminCurrentTheme=themeId; state.adminCurrentRound=1;
+  document.getElementById('admin-q-theme-name').textContent=themeName+' の設問管理';
+  [1,2,3].forEach(function(r){ document.getElementById('q-tab-'+r).classList.toggle('active',r===1); });
+  document.getElementById('copy-from-round1-wrap').style.display='none';
+  adminTab('questions'); loadAdminQuestions();
+}
+function loadAdminQuestions(){
+  var el=document.getElementById('admin-question-list');
+  el.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
+  api({action:'adminGetQuestions',themeId:state.adminCurrentTheme}).then(function(r){
+    var qs=(r.questions||[]).filter(function(q){ return String(q.round)===String(state.adminCurrentRound); });
+    if(!qs.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><p>設問がありません</p></div>'; return; }
+    el.innerHTML = qs.map(function(q){
+      return '<div style="padding:12px 0;border-bottom:1px solid var(--gray-100)">' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">' +
+        '<span style="font-size:12px;color:var(--gray-400)">'+q.orderNum+'.</span>' +
+        '<span class="type-badge '+(q.questionType==='select'?'type-select':'type-text')+'">'+(q.questionType==='select'?'選択式':'記述式')+'</span></div>' +
+        '<div style="font-size:14px;white-space:pre-wrap;margin-bottom:6px">'+escBr(q.questionText)+'</div>' +
+        (q.questionType==='select'&&q.options?'<div style="font-size:12px;color:var(--gray-400);margin-bottom:8px">選択肢: '+esc(String(q.options).replace(/\n/g,' / '))+'</div>':'') +
+        '<div class="btn-group">' +
+        '<button class="btn btn-secondary btn-sm" onclick="openQuestionModal(\''+q.questionId+'\')">編集</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteQuestion(\''+q.questionId+'\')">削除</button>' +
+        '</div></div>';
+    }).join('');
+  });
+}
+function openQuestionModal(qid){
+  document.getElementById('modal-q-id').value=qid||'';
+  document.getElementById('modal-q-text').value='';
+  document.getElementById('modal-q-options').value='';
+  document.getElementById('modal-q-order').value='';
+  document.getElementById('modal-q-error').innerHTML='';
+  setQType('text');
+  if(qid){
+    api({action:'adminGetQuestions',themeId:state.adminCurrentTheme}).then(function(r){
+      var q=(r.questions||[]).find(function(q){ return q.questionId===qid; });
+      if(q){
+        document.getElementById('modal-q-text').value=q.questionText;
+        document.getElementById('modal-q-order').value=q.orderNum;
+        setQType(q.questionType||'text');
+        if(q.questionType==='select') document.getElementById('modal-q-options').value=q.options||'';
+      }
+    });
+    document.getElementById('modal-q-title').textContent='設問を編集';
+  } else { document.getElementById('modal-q-title').textContent='設問を追加'; }
+  document.getElementById('modal-question').style.display='flex';
+}
+function setQType(type){
+  document.getElementById('qtype-text-btn').classList.toggle('active',type==='text');
+  document.getElementById('qtype-select-btn').classList.toggle('active',type==='select');
+  document.getElementById('modal-q-options-wrap').style.display=type==='select'?'block':'none';
+  document.getElementById('modal-question').dataset.qtype=type;
+}
+function saveQuestion(){
+  var qid=document.getElementById('modal-q-id').value;
+  var text=document.getElementById('modal-q-text').value.trim();
+  var order=document.getElementById('modal-q-order').value||'1';
+  var qtype=document.getElementById('modal-question').dataset.qtype||'text';
+  var opts=qtype==='select'?document.getElementById('modal-q-options').value.trim():'';
+  if(!text){ showError('modal-q-error','設問テキストを入力してください'); return; }
+  api({action:'adminSaveQuestion',questionId:qid||null,themeId:state.adminCurrentTheme,
+    round:state.adminCurrentRound,orderNum:parseInt(order)||1,
+    questionText:text,questionType:qtype,options:opts
+  }).then(function(r){
+    if(!r.ok){ showError('modal-q-error',r.error); return; }
+    closeModal('modal-question'); loadAdminQuestions();
+  });
+}
+function deleteQuestion(id){ if(!confirm('この設問を削除しますか？')) return; api({action:'adminDeleteQuestion',questionId:id}).then(function(){ loadAdminQuestions(); }); }
+function copyFromRound1(){
+  if(!confirm('初回の設問をこのタブにコピーします。既存の設問は残ります。よろしいですか？')) return;
+  api({action:'adminGetQuestions',themeId:state.adminCurrentTheme}).then(function(r){
+    var qs=(r.questions||[]).filter(function(q){ return String(q.round)==='1'; });
+    if(!qs.length){ alert('初回の設問が見つかりません。'); return; }
+    Promise.all(qs.map(function(q){
+      return api({action:'adminSaveQuestion',questionId:null,themeId:state.adminCurrentTheme,
+        round:state.adminCurrentRound,orderNum:q.orderNum,questionText:q.questionText,
+        questionType:q.questionType,options:q.options||''});
+    })).then(function(){ loadAdminQuestions(); });
+  });
+}
+
+// ── 管理: ユーザー ──
+function loadAdminUsers(){
+  api({action:'adminGetUsers'}).then(function(r){
+    var el=document.getElementById('admin-user-list');
+    if(!r.ok||!r.users||!r.users.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👤</div><p>ユーザーがいません</p></div>'; return; }
+    el.innerHTML='<div class="table-wrap"><table><tr><th>ユーザー名</th><th>登録日</th><th></th></tr>'+
+      r.users.map(function(u){
+        return '<tr><td>'+esc(u.username)+'</td>' +
+          '<td style="font-size:12px;color:var(--gray-400)">'+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</td>' +
+          '<td><button class="btn btn-danger btn-sm" onclick="deleteUser(\''+u.userId+'\',\''+esc(u.username)+'\')">削除</button></td></tr>';
+      }).join('')+'</table></div>';
+  });
+}
+function openCreateUserModal(){
+  document.getElementById('new-user-name').value='';
+  document.getElementById('new-user-pass').value='';
+  document.getElementById('modal-user-error').innerHTML='';
+  document.getElementById('modal-create-user').style.display='flex';
+}
+function adminCreateUser(){
+  var u=document.getElementById('new-user-name').value.trim();
+  var p=document.getElementById('new-user-pass').value;
+  if(!u||!p){ showError('modal-user-error','入力してください'); return; }
+  api({action:'adminCreateUser',username:u,password:p}).then(function(r){
+    if(!r.ok){ showError('modal-user-error',r.error); return; }
+    closeModal('modal-create-user'); loadAdminUsers();
+  });
+}
+function deleteUser(id,name){ if(!confirm(name+' を削除しますか？')) return; api({action:'adminDeleteUser',userId:id}).then(function(){ loadAdminUsers(); }); }
+
+// ── 管理: 回答確認 ──
+function loadAdminAnswersUserList(){
+  var el=document.getElementById('admin-answers-content');
+  el.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
+  api({action:'adminGetUsers'}).then(function(r){
+    if(!r.ok||!r.users||!r.users.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👤</div><p>ユーザーがいません</p></div>'; return; }
+    el.innerHTML=r.users.map(function(u){
+      return '<div class="theme-card" onclick="openAdminUserDetail(\''+u.userId+'\',\''+esc(u.username)+'\')">' +
+        '<div><div class="theme-name">'+esc(u.username)+'</div>' +
+        '<div class="theme-desc">登録: '+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</div></div>' +
+        '<div class="arrow">›</div></div>';
+    }).join('');
+  });
+}
+function openAdminUserDetail(userId,username){
+  document.getElementById('admin-detail-username').textContent=username+' さんの回答';
+  var el=document.getElementById('admin-detail-content');
+  el.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
+  adminTab('answer-detail');
+  api({action:'adminGetUserAnswers',userId:userId}).then(function(r){
+    if(!r.ok||!r.answerGroups||!r.answerGroups.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><p>回答がありません</p></div>'; return; }
+    var byTheme={};
+    r.answerGroups.forEach(function(g){ if(!byTheme[g.themeId]) byTheme[g.themeId]={themeName:g.themeName,rounds:[]}; byTheme[g.themeId].rounds.push(g); });
+    el.innerHTML=Object.values(byTheme).map(function(theme){
+      return '<div style="margin-bottom:16px"><div style="font-size:15px;font-weight:700;margin-bottom:8px">'+esc(theme.themeName)+'</div>'+
+        theme.rounds.map(function(g){
+          return '<div class="history-group" style="margin-bottom:8px">' +
+            '<div class="history-group-header" onclick="toggleGroup(this)">' +
+            '<div style="display:flex;align-items:center;gap:8px"><span class="round-badge round-'+g.round+'">'+ROUND_LABELS[g.round]+'</span>' +
+            '<span style="font-size:12px;color:var(--gray-400)">'+(g.answeredAt?String(g.answeredAt).slice(0,10):'')+'</span></div>' +
+            '<span style="color:var(--gray-300)">▼</span></div>' +
+            '<div class="history-group-body open">'+
+            g.items.map(function(item){
+              return '<div class="qa-item"><div class="qa-q">'+escBr(item.questionText)+'</div>' +
+                '<div class="qa-a">'+esc(item.answerText||'（未回答）')+'</div></div>';
+            }).join('')+'</div></div>';
+        }).join('')+'</div>';
+    }).join('');
+  });
+}
+
+// ── ユーティリティ ──
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+function showError(elId,msg){ var el=document.getElementById(elId); if(el) el.innerHTML=msg?'<div class="alert alert-error">'+esc(msg)+'</div>':''; }
+function esc(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function escBr(str){ return esc(str).replace(/\n/g,'<br>'); }
+
+document.getElementById('login-password').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('admin-password').addEventListener('keydown',function(e){ if(e.key==='Enter') doAdminLogin(); });
+
+</script>
+</body>
+</html>
