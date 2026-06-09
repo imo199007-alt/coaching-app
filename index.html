@@ -635,14 +635,6 @@ tr:last-child td{border-bottom:none}
 
 <script>
 
-function renderThemeRow(t, clickFn) {
-  return '<div class="row row-clickable" onclick="'+clickFn+'(''+t.themeId+'',''+esc(t.themeName)+'')">' +
-    '<div><div class="row-title">'+esc(t.themeName)+'</div>'+(t.description?'<div class="row-sub">'+esc(t.description)+'</div>':'')+
-    '</div><div class="row-arrow">›</div></div>';
-}
-
-
-
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbwa9hD7G_OphQXQtA5fbBZ_imhAL87FIdmWMjfxtooLv91TfVYn6EA1m03AHDo1kWjJ/exec';
 var ROUND_LABELS = {1:'初回',2:'1か月後',3:'3か月後'};
 var state = {token:null,role:null,username:null,userId:null,currentTheme:null,currentRound:null,adminCurrentTheme:null,adminCurrentRound:1};
@@ -741,9 +733,9 @@ function loadAnswerThemes() {
     var el = document.getElementById('theme-list-answer');
     if (!r.ok||!r.themes||!r.themes.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>テーマがありません</p></div>'; return; }
     el.innerHTML = r.themes.map(function(t){
-      return '<div class="row row-clickable" onclick="openAnswerTheme(''+t.themeId+'',''+esc(t.themeName)+'')">' +
-        '<div><div class="row-title">'+esc(t.themeName)+'</div>'+(t.description?'<div class="row-sub">'+esc(t.description)+'</div>':'')+
-        '</div><div class="row-arrow">›</div></div>';
+      return '<div class="theme-card" onclick="openAnswerTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">' +
+        '<div><div class="theme-name">'+esc(t.themeName)+'</div>'+(t.description?'<div class="theme-desc">'+esc(t.description)+'</div>':'')+
+        '</div><div class="arrow">›</div></div>';
     }).join('');
   });
 }
@@ -752,9 +744,9 @@ function loadHistoryThemes() {
     var el = document.getElementById('theme-list-history');
     if (!r.ok||!r.themes||!r.themes.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>テーマがありません</p></div>'; return; }
     el.innerHTML = r.themes.map(function(t){
-      return '<div class="row row-clickable" onclick="openHistoryTheme(''+t.themeId+'',''+esc(t.themeName)+'')">' +
-        '<div><div class="row-title">'+esc(t.themeName)+'</div>'+(t.description?'<div class="row-sub">'+esc(t.description)+'</div>':'')+
-        '</div><div class="row-arrow">›</div></div>';
+      return '<div class="theme-card" onclick="openHistoryTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">' +
+        '<div><div class="theme-name">'+esc(t.themeName)+'</div>'+(t.description?'<div class="theme-desc">'+esc(t.description)+'</div>':'')+
+        '</div><div class="arrow">›</div></div>';
     }).join('');
   });
 }
@@ -766,9 +758,9 @@ function openAnswerTheme(themeId, themeName) {
   document.getElementById('answer-questions').innerHTML = '';
   document.getElementById('answer-error').innerHTML = '';
   document.getElementById('answer-actions').style.display = 'none';
-  var html = '<div class="field"><label style="margin-bottom:8px">何回目の振り返りですか？</label><div class="opt-list">';
+  var html = '<div class="field"><label style="margin-bottom:8px">何回目の振り返りですか？</label><div class="options-list">';
   [1,2,3].forEach(function(r){
-    html += '<label class="opt-card"><input type="radio" name="round" value="'+r+'" onchange="selectRound('+r+')"><span>'+ROUND_LABELS[r]+'</span></label>';
+    html += '<label class="opt-item"><input type="radio" name="round" value="'+r+'" onchange="selectRound('+r+')"><span>'+ROUND_LABELS[r]+'</span></label>';
   });
   html += '</div></div>';
   document.getElementById('answer-round-select').innerHTML = html;
@@ -778,7 +770,7 @@ function selectRound(round) {
   state.currentRound = round;
   var el = document.getElementById('answer-questions');
   var actEl = document.getElementById('answer-actions');
-  el.innerHTML = '<div class="loading"><span class="spin"></span>設問を読み込み中...</div>';
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>設問を読み込み中...</div>';
   document.getElementById('answer-error').innerHTML = '';
   actEl.style.display = 'none';
   api({action:'getQuestions',themeId:state.currentTheme,round:round}).then(function(r){
@@ -797,7 +789,7 @@ function renderForm(questions) {
     if (q.questionType==='select'&&q.options) {
       var opts = String(q.options).split('\n').filter(function(o){ return o.trim(); });
       var short = opts.every(function(o){ return o.trim().length<=10; });
-      html += '<div class="'+listStyle+'">' +
+      html += '<div class="'+(short?'options-grid':'options-list')+'">' +
         opts.map(function(o){ return '<label class="opt-item"><input type="radio" name="q_'+q.questionId+'" value="'+esc(o.trim())+'"><span>'+esc(o.trim())+'</span></label>'; }).join('') + '</div>';
     } else {
       html += '<textarea placeholder="回答を入力してください"></textarea>';
@@ -836,13 +828,13 @@ function openHistoryTheme(themeId, themeName) {
   state.currentTheme = themeId;
   document.getElementById('history-detail-theme').textContent = themeName+' の振り返り履歴';
   var el = document.getElementById('history-detail-content');
-  el.innerHTML='<div class="loading"><span class="spin"></span>読み込み中...</div>';
+  el.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
   showPage('page-history-detail');
   api({action:'getMyThemeSummary',themeId:themeId}).then(function(r){
     if (!r.ok||!r.rounds||!r.rounds.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><p>まだ回答がありません</p></div>'; return; }
     el.innerHTML = r.rounds.map(function(round){
-      return '<div class="accordion">'  +
-        '<div class="acc-head" onclick="toggleGroup(this)">'  +
+      return '<div class="history-group">' +
+        '<div class="history-group-header" onclick="toggleGroup(this)">' +
         '<div style="display:flex;align-items:center;gap:8px"><span class="round-badge round-'+round+'">'+ROUND_LABELS[round]+'</span></div>' +
         '<span style="color:var(--gray-300)">▼</span></div>' +
         '<div class="history-group-body" data-round="'+round+'"></div></div>';
@@ -853,7 +845,7 @@ function goBackToHistory(){ showPage('page-home'); switchHomeTab('history'); }
 function toggleGroup(header) {
   var body=header.nextElementSibling; var isOpen=body.classList.contains('open');
   if (!isOpen&&body.innerHTML==='') {
-    body.innerHTML='<div class="loading"><span class="spin"></span>読み込み中...</div>';
+    body.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
     body.classList.add('open');
     api({action:'getMyAnswers',themeId:state.currentTheme,round:body.dataset.round}).then(function(r){
       body.innerHTML = r.ok ? renderView(r.answers) : '<div class="alert alert-error">読み込み失敗</div>';
@@ -867,12 +859,13 @@ function loadAdminThemes() {
     var el=document.getElementById('admin-theme-list');
     if (!r.ok||!r.themes||!r.themes.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>テーマがありません</p></div>'; return; }
     el.innerHTML = r.themes.map(function(t){
-      return '<div class="row">' +
-        '<div><div class="row-title">'+esc(t.themeName)+'</div>'+(t.description?'<div class="row-sub">'+esc(t.description)+'</div>':'')+'</div>' +
+      return '<div style="padding:12px 0;border-bottom:1px solid var(--gray-100)">' +
+        '<div style="font-weight:600;margin-bottom:6px">'+esc(t.themeName)+'</div>' +
+        (t.description?'<div style="font-size:12px;color:var(--gray-400);margin-bottom:8px">'+esc(t.description)+'</div>':'') +
         '<div class="btn-group">' +
-        '<button class="btn btn-secondary btn-sm" onclick="openQuestionsForTheme(''+t.themeId+'',''+esc(t.themeName)+'')">設問管理</button>' +
-        '<button class="btn btn-secondary btn-sm" onclick="openThemeModal(''+t.themeId+'',''+esc(t.themeName)+'',''+esc(t.description||'')+'')">編集</button>' +
-        '<button class="btn btn-danger btn-sm" onclick="deleteTheme(''+t.themeId+'')">削除</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="openQuestionsForTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">設問管理</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="openThemeModal(\''+t.themeId+'\',\''+esc(t.themeName)+'\',\''+esc(t.description||'')+'\')">編集</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteTheme(\''+t.themeId+'\')">削除</button>' +
         '</div></div>';
     }).join('');
   });
@@ -900,27 +893,27 @@ function deleteTheme(id){ if(!confirm('このテーマを削除しますか？')
 // ── 管理: 設問 ──
 function openQuestionsForTheme(themeId,themeName){
   state.adminCurrentTheme=themeId; state.adminCurrentRound=1;
-  document.getElementById('admin-q-theme-name').textContent=themeName;
+  document.getElementById('admin-q-theme-name').textContent=themeName+' の設問管理';
   [1,2,3].forEach(function(r){ document.getElementById('q-tab-'+r).classList.toggle('active',r===1); });
   document.getElementById('copy-from-round1-wrap').style.display='none';
   adminTab('questions'); loadAdminQuestions();
 }
 function loadAdminQuestions(){
   var el=document.getElementById('admin-question-list');
-  el.innerHTML='<div class="loading"><span class="spin"></span>読み込み中...</div>';
+  el.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
   api({action:'adminGetQuestions',themeId:state.adminCurrentTheme}).then(function(r){
     var qs=(r.questions||[]).filter(function(q){ return String(q.round)===String(state.adminCurrentRound); });
     if(!qs.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><p>設問がありません</p></div>'; return; }
     el.innerHTML = qs.map(function(q){
-      return '<div class="row">' +
-        '<div class="q-row-top">'  +
-        '<span class="q-num">'+q.orderNum+'.</span>' +
+      return '<div style="padding:12px 0;border-bottom:1px solid var(--gray-100)">' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">' +
+        '<span style="font-size:12px;color:var(--gray-400)">'+q.orderNum+'.</span>' +
         '<span class="type-badge '+(q.questionType==='select'?'type-select':'type-text')+'">'+(q.questionType==='select'?'選択式':'記述式')+'</span></div>' +
-        '<div class="q-text">'+escBr(q.questionText)+'</div>'  +
+        '<div style="font-size:14px;white-space:pre-wrap;margin-bottom:6px">'+escBr(q.questionText)+'</div>' +
         (q.questionType==='select'&&q.options?'<div style="font-size:12px;color:var(--gray-400);margin-bottom:8px">選択肢: '+esc(String(q.options).replace(/\n/g,' / '))+'</div>':'') +
         '<div class="btn-group">' +
-        '<button class="btn btn-secondary btn-sm" onclick="openQuestionModal(''+q.questionId+'')">編集</button>' +
-        '<button class="btn btn-danger btn-sm" onclick="deleteQuestion(''+q.questionId+'')">削除</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="openQuestionModal(\''+q.questionId+'\')">編集</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteQuestion(\''+q.questionId+'\')">削除</button>' +
         '</div></div>';
     }).join('');
   });
@@ -995,10 +988,12 @@ function loadAdminUsers(){
   api({action:'adminGetUsers'}).then(function(r){
     var el=document.getElementById('admin-user-list');
     if(!r.ok||!r.users||!r.users.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👤</div><p>ユーザーがいません</p></div>'; return; }
-    el.innerHTML='<div>'+
+    el.innerHTML='<div class="table-wrap"><table><tr><th>ユーザー名</th><th>登録日</th><th></th></tr>'+
       r.users.map(function(u){
-        return '<div class="row"><div><div class="row-title">'+esc(u.username)+'</div><div class="row-sub">'+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</div></div><button class="btn btn-ghost btn-sm" onclick="deleteUser(''+u.userId+'',''+esc(u.username)+'')">削除</button></div>';
-      }).join('')+'</div>';
+        return '<tr><td>'+esc(u.username)+'</td>' +
+          '<td style="font-size:12px;color:var(--gray-400)">'+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</td>' +
+          '<td><button class="btn btn-danger btn-sm" onclick="deleteUser(\''+u.userId+'\',\''+esc(u.username)+'\')">削除</button></td></tr>';
+      }).join('')+'</table></div>';
   });
 }
 function openCreateUserModal(){
@@ -1021,19 +1016,21 @@ function deleteUser(id,name){ if(!confirm(name+' を削除しますか？')) ret
 // ── 管理: 回答確認 ──
 function loadAdminAnswersUserList(){
   var el=document.getElementById('admin-answers-content');
-  el.innerHTML='<div class="loading"><span class="spin"></span>読み込み中...</div>';
+  el.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
   api({action:'adminGetUsers'}).then(function(r){
     if(!r.ok||!r.users||!r.users.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👤</div><p>ユーザーがいません</p></div>'; return; }
     el.innerHTML=r.users.map(function(u){
-      return '<div class="row row-clickable" onclick="openAdminUserDetail(''+u.userId+'',''+esc(u.username)+'')">' +
-        '<div><div class="row-title">'+esc(u.username)+'</div><div class="row-sub">登録: '+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</div></div><div class="row-arrow">›</div></div>';
+      return '<div class="theme-card" onclick="openAdminUserDetail(\''+u.userId+'\',\''+esc(u.username)+'\')">' +
+        '<div><div class="theme-name">'+esc(u.username)+'</div>' +
+        '<div class="theme-desc">登録: '+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</div></div>' +
+        '<div class="arrow">›</div></div>';
     }).join('');
   });
 }
 function openAdminUserDetail(userId,username){
   document.getElementById('admin-detail-username').textContent=username+' さんの回答';
   var el=document.getElementById('admin-detail-content');
-  el.innerHTML='<div class="loading"><span class="spin"></span>読み込み中...</div>';
+  el.innerHTML='<div class="loading"><span class="spinner"></span>読み込み中...</div>';
   adminTab('answer-detail');
   api({action:'adminGetUserAnswers',userId:userId}).then(function(r){
     if(!r.ok||!r.answerGroups||!r.answerGroups.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><p>回答がありません</p></div>'; return; }
@@ -1042,12 +1039,12 @@ function openAdminUserDetail(userId,username){
     el.innerHTML=Object.values(byTheme).map(function(theme){
       return '<div style="margin-bottom:16px"><div style="font-size:15px;font-weight:700;margin-bottom:8px">'+esc(theme.themeName)+'</div>'+
         theme.rounds.map(function(g){
-          return '<div class="accordion" style="margin-bottom:8px">' +
-            '<div class="acc-head" onclick="toggleGroup(this)">'  +
+          return '<div class="history-group" style="margin-bottom:8px">' +
+            '<div class="history-group-header" onclick="toggleGroup(this)">' +
             '<div style="display:flex;align-items:center;gap:8px"><span class="round-badge round-'+g.round+'">'+ROUND_LABELS[g.round]+'</span>' +
             '<span style="font-size:12px;color:var(--gray-400)">'+(g.answeredAt?String(g.answeredAt).slice(0,10):'')+'</span></div>' +
-            '<span class="acc-chevron">▼</span></div>' +
-            '<div class="acc-body open">'+
+            '<span style="color:var(--gray-300)">▼</span></div>' +
+            '<div class="history-group-body open">'+
             g.items.map(function(item){
               return '<div class="qa-item"><div class="qa-q">'+escBr(item.questionText)+'</div>' +
                 '<div class="qa-a">'+esc(item.answerText||'（未回答）')+'</div></div>';
@@ -1065,7 +1062,6 @@ function escBr(str){ return esc(str).replace(/\n/g,'<br>'); }
 
 document.getElementById('login-password').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
 document.getElementById('admin-password').addEventListener('keydown',function(e){ if(e.key==='Enter') doAdminLogin(); });
-
 
 
 </script>
