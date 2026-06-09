@@ -369,6 +369,11 @@ tr:last-child td{border-bottom:none}
       </div>
       <div id="modal-q-options-wrap" style="display:none" class="field">
         <label>選択肢（1行に1つ）</label>
+        <div style="margin-bottom:6px;display:flex;flex-wrap:wrap;gap:6px">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="insertTemplate('level5')">📋 習熟度5段階</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="insertTemplate('agree4')">📋 同意4段階</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="insertTemplate('freq4')">📋 頻度4段階</button>
+        </div>
         <textarea id="modal-q-options" placeholder="例：&#10;1=未着手&#10;2=意識あり&#10;3=実施中&#10;4=定着&#10;5=他者に指導できる"></textarea>
       </div>
       <div class="field"><label>表示順</label><input type="number" id="modal-q-order" placeholder="例：1" inputmode="numeric"></div>
@@ -698,6 +703,15 @@ function openQuestionModal(qid){
   } else { document.getElementById('modal-q-title').textContent='設問を追加'; }
   document.getElementById('modal-question').style.display='flex';
 }
+var OPTION_TEMPLATES = {
+  level5: '1=未着手\n2=意識あり\n3=実施中\n4=定着\n5=他者に指導できる',
+  agree4: '1=そう思わない\n2=あまりそう思わない\n3=ややそう思う\n4=そう思う',
+  freq4:  '1=ほとんどしない\n2=たまにする\n3=よくする\n4=いつもする'
+};
+function insertTemplate(key) {
+  document.getElementById('modal-q-options').value = OPTION_TEMPLATES[key];
+}
+
 function setQType(type){
   document.getElementById('qtype-text-btn').classList.toggle('active',type==='text');
   document.getElementById('qtype-select-btn').classList.toggle('active',type==='select');
