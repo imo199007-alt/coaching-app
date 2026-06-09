@@ -741,7 +741,7 @@ function loadAnswerThemes() {
     var el = document.getElementById('theme-list-answer');
     if (!r.ok||!r.themes||!r.themes.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>テーマがありません</p></div>'; return; }
     el.innerHTML = r.themes.map(function(t){
-      return '<div class="row row-clickable" onclick="openAnswerTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">' +
+      return '<div class="row row-clickable" onclick="openAnswerTheme(''+t.themeId+'',''+esc(t.themeName)+'')">' +
         '<div><div class="row-title">'+esc(t.themeName)+'</div>'+(t.description?'<div class="row-sub">'+esc(t.description)+'</div>':'')+
         '</div><div class="row-arrow">›</div></div>';
     }).join('');
@@ -752,7 +752,7 @@ function loadHistoryThemes() {
     var el = document.getElementById('theme-list-history');
     if (!r.ok||!r.themes||!r.themes.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>テーマがありません</p></div>'; return; }
     el.innerHTML = r.themes.map(function(t){
-      return '<div class="row row-clickable" onclick="openHistoryTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">' +
+      return '<div class="row row-clickable" onclick="openHistoryTheme(''+t.themeId+'',''+esc(t.themeName)+'')">' +
         '<div><div class="row-title">'+esc(t.themeName)+'</div>'+(t.description?'<div class="row-sub">'+esc(t.description)+'</div>':'')+
         '</div><div class="row-arrow">›</div></div>';
     }).join('');
@@ -870,9 +870,9 @@ function loadAdminThemes() {
       return '<div class="row">' +
         '<div><div class="row-title">'+esc(t.themeName)+'</div>'+(t.description?'<div class="row-sub">'+esc(t.description)+'</div>':'')+'</div>' +
         '<div class="btn-group">' +
-        '<button class="btn btn-secondary btn-sm" onclick="openQuestionsForTheme(\''+t.themeId+'\',\''+esc(t.themeName)+'\')">設問管理</button>' +
-        '<button class="btn btn-secondary btn-sm" onclick="openThemeModal(\''+t.themeId+'\',\''+esc(t.themeName)+'\',\''+esc(t.description||'')+'\')">編集</button>' +
-        '<button class="btn btn-danger btn-sm" onclick="deleteTheme(\''+t.themeId+'\')">削除</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="openQuestionsForTheme(''+t.themeId+'',''+esc(t.themeName)+'')">設問管理</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="openThemeModal(''+t.themeId+'',''+esc(t.themeName)+'',''+esc(t.description||'')+'')">編集</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteTheme(''+t.themeId+'')">削除</button>' +
         '</div></div>';
     }).join('');
   });
@@ -919,8 +919,8 @@ function loadAdminQuestions(){
         '<div class="q-text">'+escBr(q.questionText)+'</div>'  +
         (q.questionType==='select'&&q.options?'<div style="font-size:12px;color:var(--gray-400);margin-bottom:8px">選択肢: '+esc(String(q.options).replace(/\n/g,' / '))+'</div>':'') +
         '<div class="btn-group">' +
-        '<button class="btn btn-secondary btn-sm" onclick="openQuestionModal(\''+q.questionId+'\')">編集</button>' +
-        '<button class="btn btn-danger btn-sm" onclick="deleteQuestion(\''+q.questionId+'\')">削除</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="openQuestionModal(''+q.questionId+'')">編集</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteQuestion(''+q.questionId+'')">削除</button>' +
         '</div></div>';
     }).join('');
   });
@@ -997,7 +997,7 @@ function loadAdminUsers(){
     if(!r.ok||!r.users||!r.users.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👤</div><p>ユーザーがいません</p></div>'; return; }
     el.innerHTML='<div>'+
       r.users.map(function(u){
-        return '<div class="row"><div><div class="row-title">'+esc(u.username)+'</div><div class="row-sub">'+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</div></div><button class="btn btn-ghost btn-sm" onclick="deleteUser(\''+u.userId+'\',\''+esc(u.username)+'\')">削除</button></div>';
+        return '<div class="row"><div><div class="row-title">'+esc(u.username)+'</div><div class="row-sub">'+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</div></div><button class="btn btn-ghost btn-sm" onclick="deleteUser(''+u.userId+'',''+esc(u.username)+'')">削除</button></div>';
       }).join('')+'</div>';
   });
 }
@@ -1025,7 +1025,7 @@ function loadAdminAnswersUserList(){
   api({action:'adminGetUsers'}).then(function(r){
     if(!r.ok||!r.users||!r.users.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👤</div><p>ユーザーがいません</p></div>'; return; }
     el.innerHTML=r.users.map(function(u){
-      return '<div class="row row-clickable" onclick="openAdminUserDetail(\''+u.userId+'\',\''+esc(u.username)+'\')">' +
+      return '<div class="row row-clickable" onclick="openAdminUserDetail(''+u.userId+'',''+esc(u.username)+'')">' +
         '<div><div class="row-title">'+esc(u.username)+'</div><div class="row-sub">登録: '+(u.createdAt?String(u.createdAt).slice(0,10):'')+'</div></div><div class="row-arrow">›</div></div>';
     }).join('');
   });
